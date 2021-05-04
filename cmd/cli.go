@@ -47,10 +47,10 @@ func Command() {
 
 			// ===================================================================
 
-			// gcp.DeleteAllGKEClusters(c.String("project"), credentials.JSON)
-			// gcp.DeleteAllPubSub(c.String("project"), credentials.JSON)
-			// gcp.DeleteAllBuckets(c.String("project"), credentials.JSON)
-			// gcp.DeleteAllVPC(c.String("project"), credentials.JSON)
+			gcp.DeleteAllGKEClusters(c.String("project"), credentials.JSON)
+			gcp.DeleteAllPubSub(c.String("project"), credentials.JSON)
+			gcp.DeleteAllBuckets(c.String("project"), credentials.JSON)
+			gcp.DeleteAllVPC(c.String("project"), credentials.JSON)
 			// gcp.DeleteAllServiceAccounts(c.String("project"), credentials.JSON)
 			// gcp.DisableAllNonDefaultServices(c.String("project"), credentials.JSON)
 
