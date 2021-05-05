@@ -73,6 +73,9 @@ func deleteBucket(bucketName string, credJSON []byte) {
 	log.Debugf("Delete bucket: %s", bucketName)
 	disableBucketVersioning(bucketName, credJSON)
 	emptyBucket(bucketName, credJSON)
+	if DryRun {
+		return
+	}
 
 	err = client.Bucket(bucketName).Delete(ctx)
 	if err != nil {
@@ -90,6 +93,10 @@ func disableBucketVersioning(bucketName string, credJSON []byte) {
 	}
 
 	log.Debugf("Disable bucket versioning: %s", bucketName)
+	if DryRun {
+		return
+	}
+
 	_, err = client.Bucket(bucketName).Update(ctx, storage.BucketAttrsToUpdate{
 		VersioningEnabled: false,
 	})
@@ -114,7 +121,6 @@ func emptyBucket(bucketName string, credJSON []byte) {
 		Versions: true,
 	}
 
-	log.Debugf("Delete bucket objects: %s", bucketName)
 	it := bucket.Objects(ctx, query)
 	for {
 		attrs, err := it.Next()
@@ -126,6 +132,11 @@ func emptyBucket(bucketName string, credJSON []byte) {
 		}
 
 		object := bucket.Object(attrs.Name).Generation(attrs.Generation)
+		log.Debugf("Delete object: %s generation: %d", attrs.Name, attrs.Generation)
+		if DryRun {
+			continue
+		}
+
 		err = object.Delete(ctx)
 		if err != nil {
 			panic(err.Error())
