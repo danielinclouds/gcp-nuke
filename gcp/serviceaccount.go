@@ -16,7 +16,7 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListServiceAccounts(projectID string, credJSON []byte) {
+func ListServiceAccounts(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credJSON))
@@ -25,7 +25,7 @@ func ListServiceAccounts(projectID string, credJSON []byte) {
 	}
 
 	resp, err := iamService.Projects.ServiceAccounts.
-		List(fmt.Sprintf("projects/%s", projectID)).
+		List(fmt.Sprintf("projects/%s", projectId)).
 		Context(ctx).
 		Do()
 	if err != nil {
@@ -38,7 +38,7 @@ func ListServiceAccounts(projectID string, credJSON []byte) {
 
 }
 
-func DeleteAllServiceAccounts(projectID string, credJSON []byte) {
+func DeleteAllServiceAccounts(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credJSON))
@@ -47,7 +47,7 @@ func DeleteAllServiceAccounts(projectID string, credJSON []byte) {
 	}
 
 	resp, err := iamService.Projects.ServiceAccounts.
-		List(fmt.Sprintf("projects/%s", projectID)).
+		List(fmt.Sprintf("projects/%s", projectId)).
 		Context(ctx).
 		Do()
 	if err != nil {
@@ -58,7 +58,7 @@ func DeleteAllServiceAccounts(projectID string, credJSON []byte) {
 
 		// TODO
 		// 1. Don't skip gcp-nuke service account, skip current SA
-		if sa.Email == fmt.Sprintf("gcp-nuke@%s.iam.gserviceaccount.com", projectID) {
+		if sa.Email == fmt.Sprintf("gcp-nuke@%s.iam.gserviceaccount.com", projectId) {
 			log.Debug("Skipping gcp-nuke service account")
 			continue
 		}

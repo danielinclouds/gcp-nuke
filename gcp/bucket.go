@@ -16,7 +16,7 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListBuckets(projectID string, credJSON []byte) {
+func ListBuckets(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(credJSON))
@@ -24,7 +24,7 @@ func ListBuckets(projectID string, credJSON []byte) {
 		panic(err.Error())
 	}
 
-	it := client.Buckets(ctx, projectID)
+	it := client.Buckets(ctx, projectId)
 
 	for {
 		bucket, err := it.Next()
@@ -40,14 +40,14 @@ func ListBuckets(projectID string, credJSON []byte) {
 
 }
 
-func DeleteAllBuckets(projectID string, credJSON []byte) {
+func DeleteAllBuckets(projectId string, credJSON []byte) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(credJSON))
 	if err != nil {
 		panic(err.Error())
 	}
 
-	it := client.Buckets(ctx, projectID)
+	it := client.Buckets(ctx, projectId)
 
 	for {
 		bucket, err := it.Next()

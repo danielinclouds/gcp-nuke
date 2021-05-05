@@ -18,7 +18,7 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListNonDefaultServices(projectID string, credJSON []byte) {
+func ListNonDefaultServices(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	serviceusageService, err := serviceusage.NewService(ctx, option.WithCredentialsJSON(credJSON))
@@ -28,7 +28,7 @@ func ListNonDefaultServices(projectID string, credJSON []byte) {
 
 	// TODO: Handle multiple pages
 	resp, err := serviceusageService.Services.
-		List(fmt.Sprintf("projects/%s", projectID)).
+		List(fmt.Sprintf("projects/%s", projectId)).
 		Filter("state:ENABLED").
 		PageSize(200).
 		Context(ctx).
@@ -42,14 +42,14 @@ func ListNonDefaultServices(projectID string, credJSON []byte) {
 		enabledServices = append(enabledServices, service.Name)
 	}
 
-	enabledServices = removeDefaultServices(projectID, credJSON, enabledServices)
+	enabledServices = removeDefaultServices(projectId, credJSON, enabledServices)
 	for _, service := range enabledServices {
 		log.Infof("API Service: %s", service)
 	}
 
 }
 
-func DisableAllNonDefaultServices(projectID string, credJSON []byte) {
+func DisableAllNonDefaultServices(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	serviceusageService, err := serviceusage.NewService(ctx, option.WithCredentialsJSON(credJSON))
@@ -59,7 +59,7 @@ func DisableAllNonDefaultServices(projectID string, credJSON []byte) {
 
 	// TODO: Handle multiple pages
 	resp, err := serviceusageService.Services.
-		List(fmt.Sprintf("projects/%s", projectID)).
+		List(fmt.Sprintf("projects/%s", projectId)).
 		Filter("state:ENABLED").
 		PageSize(200).
 		Context(ctx).
@@ -73,7 +73,7 @@ func DisableAllNonDefaultServices(projectID string, credJSON []byte) {
 		enabledServices = append(enabledServices, service.Name)
 	}
 
-	enabledServices = removeDefaultServices(projectID, credJSON, enabledServices)
+	enabledServices = removeDefaultServices(projectId, credJSON, enabledServices)
 	for _, service := range enabledServices {
 		disableService(service, credJSON)
 	}
@@ -118,9 +118,9 @@ func disableService(serviceName string, credJSON []byte) {
 
 }
 
-func removeDefaultServices(projectID string, credJSON []byte, enabledServices []string) []string {
+func removeDefaultServices(projectId string, credJSON []byte, enabledServices []string) []string {
 
-	projectNumber := getProjectNumber(projectID, credJSON)
+	projectNumber := getProjectNumber(projectId, credJSON)
 
 	defaultServices := []string{
 		"bigquery.googleapis.com",
@@ -162,7 +162,7 @@ func removeDefaultServices(projectID string, credJSON []byte, enabledServices []
 	return nonDefaultServices
 }
 
-func getProjectNumber(projectID string, credJSON []byte) int64 {
+func getProjectNumber(projectId string, credJSON []byte) int64 {
 
 	ctx := context.Background()
 
@@ -171,7 +171,7 @@ func getProjectNumber(projectID string, credJSON []byte) int64 {
 		log.Fatal(err)
 	}
 
-	project, err := cloudresourcemanagerService.Projects.Get(projectID).Context(ctx).Do()
+	project, err := cloudresourcemanagerService.Projects.Get(projectId).Context(ctx).Do()
 	if err != nil {
 		panic(err.Error())
 	}

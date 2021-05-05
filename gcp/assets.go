@@ -10,7 +10,7 @@ import (
 	assetpb "google.golang.org/genproto/googleapis/cloud/asset/v1"
 )
 
-func ListAssets(projectID string, credJSON []byte) {
+func ListAssets(projectId string, credJSON []byte) {
 	ctx := context.Background()
 	client, err := asset.NewClient(ctx, option.WithCredentialsJSON(credJSON))
 	if err != nil {
@@ -18,7 +18,7 @@ func ListAssets(projectID string, credJSON []byte) {
 	}
 
 	req := &assetpb.SearchAllResourcesRequest{
-		Scope: fmt.Sprintf("projects/%s", projectID),
+		Scope: fmt.Sprintf("projects/%s", projectId),
 	}
 
 	it := client.SearchAllResources(ctx, req)

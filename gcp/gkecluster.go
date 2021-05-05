@@ -20,7 +20,7 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListGKEClusters(projectID string, credJSON []byte) {
+func ListGKEClusters(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	containerService, err := container.NewService(ctx, option.WithCredentialsJSON(credJSON))
@@ -29,7 +29,7 @@ func ListGKEClusters(projectID string, credJSON []byte) {
 	}
 
 	resp, err := containerService.Projects.Locations.Clusters.
-		List(fmt.Sprintf("projects/%s/locations/-", projectID)).
+		List(fmt.Sprintf("projects/%s/locations/-", projectId)).
 		Context(ctx).
 		Do()
 	if err != nil {
@@ -42,7 +42,7 @@ func ListGKEClusters(projectID string, credJSON []byte) {
 
 }
 
-func DeleteAllGKEClusters(projectID string, credJSON []byte) {
+func DeleteAllGKEClusters(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	containerService, err := container.NewService(ctx, option.WithCredentialsJSON(credJSON))
@@ -51,7 +51,7 @@ func DeleteAllGKEClusters(projectID string, credJSON []byte) {
 	}
 
 	resp, err := containerService.Projects.Locations.Clusters.
-		List(fmt.Sprintf("projects/%s/locations/-", projectID)).
+		List(fmt.Sprintf("projects/%s/locations/-", projectId)).
 		Context(ctx).
 		Do()
 	if err != nil {

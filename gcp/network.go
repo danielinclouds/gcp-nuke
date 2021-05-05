@@ -17,7 +17,7 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListVPC(projectID string, credJSON []byte) {
+func ListVPC(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	computeService, err := compute.NewService(ctx, option.WithCredentialsFile("gcp-nuke.json"))
@@ -25,7 +25,7 @@ func ListVPC(projectID string, credJSON []byte) {
 		panic(err.Error())
 	}
 
-	networkListCall := computeService.Networks.List(projectID)
+	networkListCall := computeService.Networks.List(projectId)
 	networkList, err := networkListCall.Do()
 	if err != nil {
 		panic(err.Error())
@@ -37,7 +37,7 @@ func ListVPC(projectID string, credJSON []byte) {
 
 }
 
-func DeleteAllVPC(projectID string, credJSON []byte) {
+func DeleteAllVPC(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
 	computeService, err := compute.NewService(ctx, option.WithCredentialsFile("gcp-nuke.json"))
@@ -45,7 +45,7 @@ func DeleteAllVPC(projectID string, credJSON []byte) {
 		panic(err.Error())
 	}
 
-	networks, err := computeService.Networks.List(projectID).Context(ctx).Do()
+	networks, err := computeService.Networks.List(projectId).Context(ctx).Do()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -62,11 +62,11 @@ func DeleteAllVPC(projectID string, credJSON []byte) {
 		log.Debugf("Deleting network: %s", n.Name)
 
 		deleteAllSubnetworks(credJSON, n.Subnetworks)
-		deleteVPC(projectID, credJSON, n.Name)
+		deleteVPC(projectId, credJSON, n.Name)
 	}
 }
 
-func deleteVPC(projectID string, credJSON []byte, network string) {
+func deleteVPC(projectId string, credJSON []byte, network string) {
 
 	ctx := context.Background()
 	computeService, err := compute.NewService(ctx, option.WithCredentialsFile("gcp-nuke.json"))
@@ -74,13 +74,13 @@ func deleteVPC(projectID string, credJSON []byte, network string) {
 		panic(err.Error())
 	}
 
-	networkDeleteCall := computeService.Networks.Delete(projectID, "daniel")
+	networkDeleteCall := computeService.Networks.Delete(projectId, "daniel")
 	operation, err := networkDeleteCall.Do()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	gresp, err := computeService.GlobalOperations.Wait(projectID, operation.Name).Context(ctx).Do()
+	gresp, err := computeService.GlobalOperations.Wait(projectId, operation.Name).Context(ctx).Do()
 	if err != nil {
 		panic(err.Error())
 	}
