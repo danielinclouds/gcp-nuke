@@ -25,3 +25,10 @@ Currently gcp-nuke deletes following resources:
 - PubSub
 - Service Accounts
 - API Services
+
+## Release
+```sh
+git tag -a v0.1.0 -m "Some release"
+git push --tags
+goreleaser release --rm-dist
+```
