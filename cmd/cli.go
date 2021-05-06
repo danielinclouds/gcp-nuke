@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -15,7 +16,7 @@ func Command() {
 		Name:      "gcp-nuke",
 		Usage:     "The GCP project cleanup tool",
 		Version:   "v0.1.0",
-		UsageText: "e.g. gcp-nuke --project test-nuke-262510",
+		UsageText: "gcp-nuke [option]...",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     "project",
@@ -26,7 +27,7 @@ func Command() {
 			&cli.StringFlag{
 				Name:     "credentials",
 				Aliases:  []string{"c"},
-				Usage:    "File with GCP credentials",
+				Usage:    "Path to file with GCP credentials",
 				Required: false,
 			},
 			&cli.BoolFlag{
@@ -74,6 +75,23 @@ func Command() {
 			return nil
 		},
 	}
+
+	cli.AppHelpTemplate = fmt.Sprintf(`%s
+ENVIRONMENT VARIABLES:
+   GOOGLE_CREDENTIALS
+   GOOGLE_CLOUD_KEYFILE_JSON
+
+EXAMPLES:
+   # Delete all resources from project using credentials from env
+   gcp-nuke --project PROJECT_ID
+   
+   # Delete all resources from project using credentials file
+   gcp-nuke --project PROJECT_ID --credentials creds.json
+   
+   # List resources in project
+   gcp-nuke --project PROJECT_ID --list
+	
+	`, cli.AppHelpTemplate)
 
 	err := app.Run(os.Args)
 	if err != nil {
