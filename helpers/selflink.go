@@ -18,9 +18,9 @@ type SubnetworkSelfLink struct {
 // Function ParseSubnetworkSelfLink parses Subnetwork selfLink into SubnetworkSelfLink struct
 // e.g. https://www.googleapis.com/compute/v1/projects/test-123/regions/europe-west1/subnetworks/sub1
 // SubnetworkSelfLink {
-//     Projects:     test-123
-//     Regions:      europe-west1
-//     ResourceName: sub1
+//     Project: test-123
+//     Region:  europe-west1
+//     Name:    sub1
 // }
 func ParseSubnetworkSelfLink(u string) (SubnetworkSelfLink, error) {
 
