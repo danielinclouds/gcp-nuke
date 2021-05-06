@@ -16,10 +16,10 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListServiceAccounts(projectId string, credJSON []byte) {
+func ListServiceAccounts(projectId string, credentials Credentials) {
 
 	ctx := context.Background()
-	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credJSON))
+	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credentials.JSON))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -33,15 +33,21 @@ func ListServiceAccounts(projectId string, credJSON []byte) {
 	}
 
 	for _, sa := range resp.Accounts {
+
+		if sa.Email == credentials.Email {
+			log.Infof("Skipping current %s service account", credentials.Email)
+			continue
+		}
+
 		log.Infof("Service account: %s", sa.Name)
 	}
 
 }
 
-func DeleteAllServiceAccounts(projectId string, credJSON []byte) {
+func DeleteAllServiceAccounts(projectId string, credentials Credentials) {
 
 	ctx := context.Background()
-	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credJSON))
+	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credentials.JSON))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -56,24 +62,22 @@ func DeleteAllServiceAccounts(projectId string, credJSON []byte) {
 
 	for _, sa := range resp.Accounts {
 
-		// TODO
-		// 1. Don't skip gcp-nuke service account, skip current SA
-		if sa.Email == fmt.Sprintf("gcp-nuke@%s.iam.gserviceaccount.com", projectId) {
-			log.Debug("Skipping gcp-nuke service account")
+		if sa.Email == credentials.Email {
+			log.Debugf("Skipping current %s service account", credentials.Email)
 			continue
 		}
 
-		log.Debugf("Deleting service account: %s", sa.Name)
-		deleteServiceAccount(sa.Name, credJSON)
+		log.Debugf("Delete service account: %s", sa.Name)
+		deleteServiceAccount(sa.Name, credentials)
 
 	}
 
 }
 
-func deleteServiceAccount(name string, credJSON []byte) {
+func deleteServiceAccount(name string, credentials Credentials) {
 
 	ctx := context.Background()
-	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credJSON))
+	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credentials.JSON))
 	if err != nil {
 		panic(err.Error())
 	}

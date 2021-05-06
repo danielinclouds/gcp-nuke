@@ -58,7 +58,7 @@ func Command() {
 				gcp.ListBuckets(c.String("project"), credentials.JSON)
 				gcp.ListGKEClusters(c.String("project"), credentials.JSON)
 				gcp.ListVPC(c.String("project"), credentials.JSON)
-				gcp.ListServiceAccounts(c.String("project"), credentials.JSON)
+				gcp.ListServiceAccounts(c.String("project"), credentials)
 				gcp.ListNonDefaultServices(c.String("project"), credentials.JSON)
 				// gcp.ListAssets(c.String("project"), credentials.JSON)
 				return nil
@@ -68,8 +68,8 @@ func Command() {
 			gcp.DeleteAllPubSub(c.String("project"), credentials.JSON)
 			gcp.DeleteAllBuckets(c.String("project"), credentials.JSON)
 			gcp.DeleteAllVPC(c.String("project"), credentials.JSON)
-			gcp.DeleteAllServiceAccounts(c.String("project"), credentials.JSON)
-			gcp.DisableAllNonDefaultServices(c.String("project"), credentials.JSON)
+			gcp.DeleteAllServiceAccounts(c.String("project"), credentials)
+			// gcp.DisableAllNonDefaultServices(c.String("project"), credentials.JSON)
 
 			return nil
 		},
