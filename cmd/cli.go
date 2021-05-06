@@ -83,6 +83,7 @@ ENVIRONMENT VARIABLES:
 
 EXAMPLES:
    # Delete all resources from project using credentials from env
+   export GOOGLE_CREDENTIALS=$(cat gcp-nuke.json)
    gcp-nuke --project PROJECT_ID
    
    # Delete all resources from project using credentials file
