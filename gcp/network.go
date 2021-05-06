@@ -102,7 +102,7 @@ func deleteAllSubnetworks(credJSON []byte, subnetworks []string) {
 			panic(err.Error())
 		}
 
-		log.Debugf("Deleting subnetwork: %s", sub.ResourceName)
+		log.Debugf("Deleting subnetwork: %s", sub.Name)
 		deleteSubnetwork(credJSON, sub)
 	}
 
@@ -117,7 +117,7 @@ func deleteSubnetwork(credJSON []byte, subnetwork helpers.SubnetworkSelfLink) {
 	}
 
 	operation, err := computeService.Subnetworks.
-		Delete(subnetwork.Projects, subnetwork.Regions, subnetwork.ResourceName).
+		Delete(subnetwork.Project, subnetwork.Region, subnetwork.Name).
 		Context(ctx).
 		Do()
 	if err != nil {
@@ -125,7 +125,7 @@ func deleteSubnetwork(credJSON []byte, subnetwork helpers.SubnetworkSelfLink) {
 	}
 
 	resp, err := computeService.RegionOperations.
-		Wait(subnetwork.Projects, subnetwork.Regions, operation.Name).
+		Wait(subnetwork.Project, subnetwork.Region, operation.Name).
 		Context(ctx).
 		Do()
 	if err != nil {

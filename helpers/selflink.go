@@ -7,9 +7,9 @@ import (
 )
 
 type SubnetworkSelfLink struct {
-	Projects     string
-	Regions      string
-	ResourceName string
+	Project string
+	Region  string
+	Name    string
 }
 
 // TODO:
@@ -42,9 +42,9 @@ func ParseSubnetworkSelfLink(u string) (SubnetworkSelfLink, error) {
 	resourceName = strings.TrimSuffix(resourceName, "/")
 
 	return SubnetworkSelfLink{
-			Projects:     project,
-			Regions:      region,
-			ResourceName: resourceName,
+			Project: project,
+			Region:  region,
+			Name:    resourceName,
 		},
 		nil
 
