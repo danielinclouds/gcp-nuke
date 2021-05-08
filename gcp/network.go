@@ -20,7 +20,7 @@ func init() {
 func ListVPC(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
-	computeService, err := compute.NewService(ctx, option.WithCredentialsFile("gcp-nuke.json"))
+	computeService, err := compute.NewService(ctx, option.WithCredentialsJSON(credJSON))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -40,7 +40,7 @@ func ListVPC(projectId string, credJSON []byte) {
 func DeleteAllVPC(projectId string, credJSON []byte) {
 
 	ctx := context.Background()
-	computeService, err := compute.NewService(ctx, option.WithCredentialsFile("gcp-nuke.json"))
+	computeService, err := compute.NewService(ctx, option.WithCredentialsJSON(credJSON))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -69,7 +69,7 @@ func DeleteAllVPC(projectId string, credJSON []byte) {
 func deleteVPC(projectId string, credJSON []byte, network string) {
 
 	ctx := context.Background()
-	computeService, err := compute.NewService(ctx, option.WithCredentialsFile("gcp-nuke.json"))
+	computeService, err := compute.NewService(ctx, option.WithCredentialsJSON(credJSON))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -111,7 +111,7 @@ func deleteAllSubnetworks(credJSON []byte, subnetworks []string) {
 func deleteSubnetwork(credJSON []byte, subnetwork helpers.SubnetworkSelfLink) {
 
 	ctx := context.Background()
-	computeService, err := compute.NewService(ctx, option.WithCredentialsFile("gcp-nuke.json"))
+	computeService, err := compute.NewService(ctx, option.WithCredentialsJSON(credJSON))
 	if err != nil {
 		panic(err.Error())
 	}
