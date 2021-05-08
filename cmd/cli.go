@@ -31,12 +31,6 @@ func Command() {
 				Required: false,
 			},
 			&cli.BoolFlag{
-				Name:     "list",
-				Usage:    "Only list resources",
-				Value:    false,
-				Required: false,
-			},
-			&cli.BoolFlag{
 				Name:     "dry-run",
 				Usage:    "Dry run without taking any action.",
 				Value:    false,
@@ -50,26 +44,23 @@ func Command() {
 				panic(err.Error())
 			}
 
-			if c.Bool("dry-run") == true {
-				gcp.DryRun = true
-			}
+			// gcp.ListPubSub(c.String("project"), credentials.JSON)
+			gcp.ListBuckets(c.String("project"), credentials.JSON)
+			// gcp.ListGKEClusters(c.String("project"), credentials.JSON)
+			// gcp.ListVPC(c.String("project"), credentials.JSON)
+			// gcp.ListServiceAccounts(c.String("project"), credentials)
+			// gcp.ListNonDefaultServices(c.String("project"), credentials.JSON)
+			// gcp.ListAssets(c.String("project"), credentials.JSON)
 
-			if c.Bool("list") == true {
-				gcp.ListPubSub(c.String("project"), credentials.JSON)
-				gcp.ListBuckets(c.String("project"), credentials.JSON)
-				gcp.ListGKEClusters(c.String("project"), credentials.JSON)
-				gcp.ListVPC(c.String("project"), credentials.JSON)
-				gcp.ListServiceAccounts(c.String("project"), credentials)
-				gcp.ListNonDefaultServices(c.String("project"), credentials.JSON)
-				// gcp.ListAssets(c.String("project"), credentials.JSON)
+			if c.Bool("dry-run") == true {
 				return nil
 			}
 
-			gcp.DeleteAllGKEClusters(c.String("project"), credentials.JSON)
-			gcp.DeleteAllPubSub(c.String("project"), credentials.JSON)
+			// gcp.DeleteAllGKEClusters(c.String("project"), credentials.JSON)
+			// gcp.DeleteAllPubSub(c.String("project"), credentials.JSON)
 			gcp.DeleteAllBuckets(c.String("project"), credentials.JSON)
-			gcp.DeleteAllVPC(c.String("project"), credentials.JSON)
-			gcp.DeleteAllServiceAccounts(c.String("project"), credentials)
+			// gcp.DeleteAllVPC(c.String("project"), credentials.JSON)
+			// gcp.DeleteAllServiceAccounts(c.String("project"), credentials)
 			// gcp.DisableAllNonDefaultServices(c.String("project"), credentials.JSON)
 
 			return nil
@@ -90,7 +81,7 @@ EXAMPLES:
    gcp-nuke --project PROJECT_ID --credentials creds.json
    
    # List resources in project
-   gcp-nuke --project PROJECT_ID --list
+   gcp-nuke --project PROJECT_ID --dry-run
 	
 	`, cli.AppHelpTemplate)
 
