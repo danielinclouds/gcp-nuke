@@ -41,14 +41,14 @@ func Command() {
 
 			credentials, err := gcp.FindCredentials(c.String("credentials"))
 			if err != nil {
-				panic(err.Error())
+				return err
 			}
 
-			// gcp.ListPubSub(c.String("project"), credentials.JSON)
+			gcp.ListPubSub(c.String("project"), credentials.JSON)
 			gcp.ListBuckets(c.String("project"), credentials.JSON)
-			// gcp.ListGKEClusters(c.String("project"), credentials.JSON)
-			// gcp.ListVPC(c.String("project"), credentials.JSON)
-			// gcp.ListServiceAccounts(c.String("project"), credentials)
+			gcp.ListGKEClusters(c.String("project"), credentials.JSON)
+			gcp.ListVPC(c.String("project"), credentials.JSON)
+			gcp.ListServiceAccounts(c.String("project"), credentials)
 			// gcp.ListNonDefaultServices(c.String("project"), credentials.JSON)
 			// gcp.ListAssets(c.String("project"), credentials.JSON)
 
@@ -56,11 +56,11 @@ func Command() {
 				return nil
 			}
 
-			// gcp.DeleteAllGKEClusters(c.String("project"), credentials.JSON)
-			// gcp.DeleteAllPubSub(c.String("project"), credentials.JSON)
+			gcp.DeleteAllGKEClusters(c.String("project"), credentials.JSON)
+			gcp.DeleteAllPubSub(c.String("project"), credentials.JSON)
 			gcp.DeleteAllBuckets(c.String("project"), credentials.JSON)
-			// gcp.DeleteAllVPC(c.String("project"), credentials.JSON)
-			// gcp.DeleteAllServiceAccounts(c.String("project"), credentials)
+			gcp.DeleteAllVPC(c.String("project"), credentials.JSON)
+			gcp.DeleteAllServiceAccounts(c.String("project"), credentials)
 			// gcp.DisableAllNonDefaultServices(c.String("project"), credentials.JSON)
 
 			return nil

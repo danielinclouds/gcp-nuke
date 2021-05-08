@@ -21,6 +21,10 @@ func init() {
 }
 
 func ListGKEClusters(projectId string, credJSON []byte) {
+	if isServiceDisabled(projectId, credJSON, "container.googleapis.com") {
+		log.Debug("Kubernetes Engine API is disabled")
+		return
+	}
 
 	ctx := context.Background()
 	containerService, err := container.NewService(ctx, option.WithCredentialsJSON(credJSON))
@@ -43,6 +47,10 @@ func ListGKEClusters(projectId string, credJSON []byte) {
 }
 
 func DeleteAllGKEClusters(projectId string, credJSON []byte) {
+	if isServiceDisabled(projectId, credJSON, "container.googleapis.com") {
+		log.Debug("Kubernetes Engine API is disabled")
+		return
+	}
 
 	ctx := context.Background()
 	containerService, err := container.NewService(ctx, option.WithCredentialsJSON(credJSON))

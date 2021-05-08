@@ -178,3 +178,26 @@ func getProjectNumber(projectId string, credJSON []byte) int64 {
 
 	return project.ProjectNumber
 }
+
+func isServiceDisabled(projectId string, credJSON []byte, api string) bool {
+
+	ctx := context.Background()
+	serviceusageService, err := serviceusage.NewService(ctx, option.WithCredentialsJSON(credJSON))
+	if err != nil {
+		panic(err.Error())
+	}
+
+	service, err := serviceusageService.Services.
+		Get(fmt.Sprintf("projects/%s/services/%s", projectId, api)).
+		Context(ctx).
+		Do()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if service.State == "ENABLED" {
+		return false
+	}
+
+	return true
+}

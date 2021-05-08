@@ -18,6 +18,11 @@ func init() {
 }
 
 func ListPubSub(projectId string, credJSON []byte) {
+	if isServiceDisabled(projectId, credJSON, "pubsub.googleapis.com") {
+		log.Debug("PubSub API is disabled")
+		return
+	}
+
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, projectId, option.WithCredentialsJSON(credJSON))
 	if err != nil {
@@ -57,6 +62,11 @@ func ListPubSub(projectId string, credJSON []byte) {
 }
 
 func DeleteAllPubSub(projectId string, credJSON []byte) {
+	if isServiceDisabled(projectId, credJSON, "pubsub.googleapis.com") {
+		log.Debug("PubSub API is disabled")
+		return
+	}
+
 	ctx := context.Background()
 	client, err := pubsub.NewClient(ctx, projectId, option.WithCredentialsJSON(credJSON))
 	if err != nil {
