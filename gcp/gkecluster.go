@@ -4,24 +4,16 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/danielinclouds/gcp-nuke/config"
-	log "github.com/sirupsen/logrus"
 )
-
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
-}
 
 func ListGKEClusters(cfg *config.Config) {
 	if isServiceDisabled(cfg, "container.googleapis.com") {
-		log.Debug("Kubernetes Engine API is disabled")
+		cfg.Log.Debug("Kubernetes Engine API is disabled")
 		return
 	}
 
@@ -34,14 +26,14 @@ func ListGKEClusters(cfg *config.Config) {
 	}
 
 	for _, cluster := range resp.Clusters {
-		log.Infof("GKE Cluster: %s", cluster.SelfLink)
+		cfg.Log.Infof("GKE Cluster: %s", cluster.SelfLink)
 	}
 
 }
 
 func DeleteAllGKEClusters(cfg *config.Config) {
 	if isServiceDisabled(cfg, "container.googleapis.com") {
-		log.Debug("Kubernetes Engine API is disabled")
+		cfg.Log.Debug("Kubernetes Engine API is disabled")
 		return
 	}
 
@@ -99,7 +91,7 @@ func deleteGKECluster(selfLink string, cfg *config.Config, wg *sync.WaitGroup) {
 			if err != nil {
 				panic(err.Error())
 			}
-			log.Debugf("Deleting cluster %s status: %s", clusterName, operation.Status)
+			cfg.Log.Debugf("Deleting cluster %s status: %s", clusterName, operation.Status)
 
 			if operation.Status == "DONE" {
 				done <- true
@@ -111,9 +103,9 @@ func deleteGKECluster(selfLink string, cfg *config.Config, wg *sync.WaitGroup) {
 
 	select {
 	case <-done:
-		log.Debugf("Finished deleting cluster: %s", clusterName)
+		cfg.Log.Debugf("Finished deleting cluster: %s", clusterName)
 
 	case <-time.After(3 * time.Minute):
-		log.Debugf("Timeout while deleting cluster: %s", clusterName)
+		cfg.Log.Debugf("Timeout while deleting cluster: %s", clusterName)
 	}
 }

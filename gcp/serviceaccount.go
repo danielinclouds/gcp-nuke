@@ -3,17 +3,9 @@ package gcp
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/danielinclouds/gcp-nuke/config"
-	log "github.com/sirupsen/logrus"
 )
-
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
-}
 
 func ListServiceAccounts(cfg *config.Config) {
 
@@ -28,11 +20,11 @@ func ListServiceAccounts(cfg *config.Config) {
 	for _, sa := range resp.Accounts {
 
 		if sa.Email == cfg.Credentials.Email {
-			log.Infof("Skipping current %s service account", cfg.Credentials.Email)
+			cfg.Log.Infof("Skipping current %s service account", cfg.Credentials.Email)
 			continue
 		}
 
-		log.Infof("Service account: %s", sa.Name)
+		cfg.Log.Infof("Service account: %s", sa.Name)
 	}
 
 }
@@ -50,11 +42,11 @@ func DeleteAllServiceAccounts(cfg *config.Config) {
 	for _, sa := range resp.Accounts {
 
 		if sa.Email == cfg.Credentials.Email {
-			log.Debugf("Skipping current %s service account", cfg.Credentials.Email)
+			cfg.Log.Debugf("Skipping current %s service account", cfg.Credentials.Email)
 			continue
 		}
 
-		log.Debugf("Delete service account: %s", sa.Name)
+		cfg.Log.Debugf("Delete service account: %s", sa.Name)
 		deleteServiceAccount(cfg, sa.Name)
 
 	}

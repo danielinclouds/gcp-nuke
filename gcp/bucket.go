@@ -2,20 +2,12 @@ package gcp
 
 import (
 	"context"
-	"os"
 
 	"cloud.google.com/go/storage"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
 
 	"github.com/danielinclouds/gcp-nuke/config"
 )
-
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
-}
 
 func ListBuckets(cfg *config.Config) {
 
@@ -30,7 +22,7 @@ func ListBuckets(cfg *config.Config) {
 			panic(err.Error())
 		}
 
-		log.Infof("Bucket: %s", bucket.Name)
+		cfg.Log.Infof("Bucket: %s", bucket.Name)
 	}
 
 }
@@ -54,7 +46,7 @@ func DeleteAllBuckets(cfg *config.Config) {
 
 func deleteBucket(cfg *config.Config, bucketName string) {
 
-	log.Debugf("Delete bucket: %s", bucketName)
+	cfg.Log.Debugf("Delete bucket: %s", bucketName)
 	disableBucketVersioning(cfg, bucketName)
 	emptyBucket(cfg, bucketName)
 
@@ -67,7 +59,7 @@ func deleteBucket(cfg *config.Config, bucketName string) {
 
 func disableBucketVersioning(cfg *config.Config, bucketName string) {
 
-	log.Debugf("Disable bucket versioning: %s", bucketName)
+	cfg.Log.Debugf("Disable bucket versioning: %s", bucketName)
 	_, err := cfg.StorageClient.Bucket(bucketName).Update(context.Background(), storage.BucketAttrsToUpdate{
 		VersioningEnabled: false,
 	})
@@ -93,11 +85,11 @@ func emptyBucket(cfg *config.Config, bucketName string) {
 			break
 		}
 		if err != nil {
-			log.Fatal(err)
+			cfg.Log.Fatal(err)
 		}
 
 		object := bucket.Object(attrs.Name).Generation(attrs.Generation)
-		log.Debugf("Delete object: %s generation: %d", attrs.Name, attrs.Generation)
+		cfg.Log.Debugf("Delete object: %s generation: %d", attrs.Name, attrs.Generation)
 		err = object.Delete(context.Background())
 		if err != nil {
 			panic(err.Error())

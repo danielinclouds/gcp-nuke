@@ -3,23 +3,16 @@ package gcp
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/danielinclouds/gcp-nuke/config"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
 	assetpb "google.golang.org/genproto/googleapis/cloud/asset/v1"
 )
 
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
-}
-
 func ListAssets(cfg *config.Config) {
+
 	if isServiceDisabled(cfg, "cloudasset.googleapis.com") {
-		log.Debug("Assets API is disabled")
+		cfg.Log.Debug("Assets API is disabled")
 		return
 	}
 

@@ -2,19 +2,10 @@ package gcp
 
 import (
 	"context"
-	"os"
 
 	"github.com/danielinclouds/gcp-nuke/config"
 	"github.com/danielinclouds/gcp-nuke/helpers"
-
-	log "github.com/sirupsen/logrus"
 )
-
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
-}
 
 func ListVPC(cfg *config.Config) {
 
@@ -25,7 +16,7 @@ func ListVPC(cfg *config.Config) {
 	}
 
 	for _, n := range networkList.Items {
-		log.Infof("Network: %s", n.Name)
+		cfg.Log.Infof("Network: %s", n.Name)
 	}
 
 }
@@ -42,11 +33,11 @@ func DeleteAllVPC(cfg *config.Config) {
 		// TODO:
 		// 1. Don't skip default network
 		if n.Name == "default" {
-			log.Debug("Skipping default network")
+			cfg.Log.Debug("Skipping default network")
 			continue
 		}
 
-		log.Debugf("Deleting network: %s", n.Name)
+		cfg.Log.Debugf("Deleting network: %s", n.Name)
 
 		deleteAllSubnetworks(cfg, n.Subnetworks)
 		deleteVPC(cfg, n.Name)
@@ -71,7 +62,7 @@ func deleteVPC(cfg *config.Config, network string) {
 
 	if gresp.Error != nil {
 		for _, m := range gresp.Error.Errors {
-			log.Error(m.Message)
+			cfg.Log.Error(m.Message)
 		}
 		panic("FAILED")
 	}
@@ -86,7 +77,7 @@ func deleteAllSubnetworks(cfg *config.Config, subnetworks []string) {
 			panic(err.Error())
 		}
 
-		log.Debugf("Deleting subnetwork: %s", sub.Name)
+		cfg.Log.Debugf("Deleting subnetwork: %s", sub.Name)
 		deleteSubnetwork(cfg, sub)
 	}
 
@@ -112,7 +103,7 @@ func deleteSubnetwork(cfg *config.Config, subnetwork helpers.SubnetworkSelfLink)
 
 	if resp.Error != nil {
 		for _, m := range resp.Error.Errors {
-			log.Error(m.Message)
+			cfg.Log.Error(m.Message)
 		}
 		panic("FAILED")
 	}

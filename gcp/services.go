@@ -3,21 +3,13 @@ package gcp
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/danielinclouds/gcp-nuke/config"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/serviceusage/v1"
 )
-
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
-}
 
 func ListNonDefaultServices(cfg *config.Config) {
 
@@ -39,7 +31,7 @@ func ListNonDefaultServices(cfg *config.Config) {
 
 	enabledServices = removeDefaultServices(cfg, enabledServices)
 	for _, service := range enabledServices {
-		log.Infof("API Service: %s", service)
+		cfg.Log.Infof("API Service: %s", service)
 	}
 
 }
@@ -71,7 +63,7 @@ func DisableAllNonDefaultServices(cfg *config.Config) {
 
 func disableService(cfg *config.Config, serviceName string) {
 
-	log.Debugf("Disable service: %s", serviceName)
+	cfg.Log.Debugf("Disable service: %s", serviceName)
 	operation, err := cfg.ServiceusageService.Services.
 		Disable(serviceName, &serviceusage.DisableServiceRequest{DisableDependentServices: true}).
 		Context(context.Background()).
@@ -149,7 +141,7 @@ func getProjectNumber(cfg *config.Config) int64 {
 
 	cloudresourcemanagerService, err := cloudresourcemanager.NewService(context.Background(), option.WithCredentialsJSON(cfg.Credentials.JSON))
 	if err != nil {
-		log.Fatal(err)
+		cfg.Log.Fatal(err)
 	}
 
 	project, err := cloudresourcemanagerService.Projects.

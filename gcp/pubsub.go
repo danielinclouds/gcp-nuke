@@ -2,22 +2,14 @@ package gcp
 
 import (
 	"context"
-	"os"
 
 	"github.com/danielinclouds/gcp-nuke/config"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
 )
 
-func init() {
-	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
-}
-
 func ListPubSub(cfg *config.Config) {
 	if isServiceDisabled(cfg, "pubsub.googleapis.com") {
-		log.Debug("PubSub API is disabled")
+		cfg.Log.Debug("PubSub API is disabled")
 		return
 	}
 
@@ -32,7 +24,7 @@ func ListPubSub(cfg *config.Config) {
 			panic(err.Error())
 		}
 
-		log.Infof("Subscription: %s", subscription.ID())
+		cfg.Log.Infof("Subscription: %s", subscription.ID())
 
 	}
 
@@ -47,13 +39,13 @@ func ListPubSub(cfg *config.Config) {
 			panic(err.Error())
 		}
 
-		log.Infof("Topic: %s", topic.ID())
+		cfg.Log.Infof("Topic: %s", topic.ID())
 	}
 }
 
 func DeleteAllPubSub(cfg *config.Config) {
 	if isServiceDisabled(cfg, "pubsub.googleapis.com") {
-		log.Debug("PubSub API is disabled")
+		cfg.Log.Debug("PubSub API is disabled")
 		return
 	}
 
@@ -68,7 +60,7 @@ func DeleteAllPubSub(cfg *config.Config) {
 			panic(err.Error())
 		}
 
-		log.Debugf("Deleting subscription: %s", subscription.ID())
+		cfg.Log.Debugf("Deleting subscription: %s", subscription.ID())
 		err = subscription.Delete(context.Background())
 		if err != nil {
 			panic(err.Error())
@@ -87,7 +79,7 @@ func DeleteAllPubSub(cfg *config.Config) {
 			panic(err.Error())
 		}
 
-		log.Debugf("Deleting topic: %s", topic.ID())
+		cfg.Log.Debugf("Deleting topic: %s", topic.ID())
 		err = topic.Delete(context.Background())
 		if err != nil {
 			panic(err.Error())

@@ -5,6 +5,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/storage"
 	"github.com/danielinclouds/gcp-nuke/credentials"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
 	"google.golang.org/api/iam/v1"
@@ -14,6 +15,7 @@ import (
 type Config struct {
 	Project             string
 	Credentials         credentials.Credentials
+	Log                 *logrus.Logger
 	StorageClient       *storage.Client
 	ContainerService    *container.Service
 	ServiceusageService *serviceusage.Service

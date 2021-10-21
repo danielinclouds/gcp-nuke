@@ -9,6 +9,7 @@ import (
 	"github.com/danielinclouds/gcp-nuke/config"
 	"github.com/danielinclouds/gcp-nuke/credentials"
 	"github.com/danielinclouds/gcp-nuke/gcp"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
 	"google.golang.org/api/iam/v1"
@@ -53,6 +54,14 @@ func Command() {
 			creds, err := credentials.FindCredentials(c.String("credentials"))
 			if err != nil {
 				return err
+			}
+
+			// Logging
+			var log = &logrus.Logger{
+				Out:       os.Stdout,
+				Formatter: new(logrus.TextFormatter),
+				Hooks:     make(logrus.LevelHooks),
+				Level:     logrus.DebugLevel,
 			}
 
 			// Bucket
@@ -106,6 +115,7 @@ func Command() {
 			cfg := config.Config{
 				Project:             c.String("project"),
 				Credentials:         creds,
+				Log:                 log,
 				StorageClient:       storageClient,
 				ContainerService:    containerService,
 				ServiceusageService: serviceusageService,
