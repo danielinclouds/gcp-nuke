@@ -9,9 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/danielinclouds/gcp-nuke/config"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/api/container/v1"
-	"google.golang.org/api/option"
 )
 
 func init() {
@@ -20,21 +19,15 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListGKEClusters(projectId string, credJSON []byte) {
-	if isServiceDisabled(projectId, credJSON, "container.googleapis.com") {
+func ListGKEClusters(cfg *config.Config) {
+	if isServiceDisabled(cfg, "container.googleapis.com") {
 		log.Debug("Kubernetes Engine API is disabled")
 		return
 	}
 
-	ctx := context.Background()
-	containerService, err := container.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	resp, err := containerService.Projects.Locations.Clusters.
-		List(fmt.Sprintf("projects/%s/locations/-", projectId)).
-		Context(ctx).
+	resp, err := cfg.ContainerService.Projects.Locations.Clusters.
+		List(fmt.Sprintf("projects/%s/locations/-", cfg.Project)).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
@@ -46,21 +39,15 @@ func ListGKEClusters(projectId string, credJSON []byte) {
 
 }
 
-func DeleteAllGKEClusters(projectId string, credJSON []byte) {
-	if isServiceDisabled(projectId, credJSON, "container.googleapis.com") {
+func DeleteAllGKEClusters(cfg *config.Config) {
+	if isServiceDisabled(cfg, "container.googleapis.com") {
 		log.Debug("Kubernetes Engine API is disabled")
 		return
 	}
 
-	ctx := context.Background()
-	containerService, err := container.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	resp, err := containerService.Projects.Locations.Clusters.
-		List(fmt.Sprintf("projects/%s/locations/-", projectId)).
-		Context(ctx).
+	resp, err := cfg.ContainerService.Projects.Locations.Clusters.
+		List(fmt.Sprintf("projects/%s/locations/-", cfg.Project)).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
@@ -69,21 +56,15 @@ func DeleteAllGKEClusters(projectId string, credJSON []byte) {
 	var wg sync.WaitGroup
 	for _, cluster := range resp.Clusters {
 		wg.Add(1)
-		go deleteGKECluster(cluster.SelfLink, credJSON, &wg)
+		go deleteGKECluster(cluster.SelfLink, cfg, &wg)
 	}
 
 	wg.Wait()
 }
 
-func deleteGKECluster(selfLink string, credJSON []byte, wg *sync.WaitGroup) {
+func deleteGKECluster(selfLink string, cfg *config.Config, wg *sync.WaitGroup) {
 
 	defer wg.Done()
-
-	ctx := context.Background()
-	containerService, err := container.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
 
 	selfLinkUrl, err := url.Parse(selfLink)
 	if err != nil {
@@ -91,7 +72,10 @@ func deleteGKECluster(selfLink string, credJSON []byte, wg *sync.WaitGroup) {
 	}
 	clusterName := strings.TrimPrefix(selfLinkUrl.Path, "/v1/")
 
-	resp, err := containerService.Projects.Locations.Clusters.Delete(clusterName).Context(ctx).Do()
+	resp, err := cfg.ContainerService.Projects.Locations.Clusters.
+		Delete(clusterName).
+		Context(context.Background()).
+		Do()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -108,7 +92,10 @@ func deleteGKECluster(selfLink string, credJSON []byte, wg *sync.WaitGroup) {
 		ticker := time.NewTicker(5 * time.Second)
 		for range ticker.C {
 
-			operation, err := containerService.Projects.Locations.Operations.Get(operationName).Context(ctx).Do()
+			operation, err := cfg.ContainerService.Projects.Locations.Operations.
+				Get(operationName).
+				Context(context.Background()).
+				Do()
 			if err != nil {
 				panic(err.Error())
 			}

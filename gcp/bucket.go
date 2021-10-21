@@ -7,7 +7,8 @@ import (
 	"cloud.google.com/go/storage"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
+
+	"github.com/danielinclouds/gcp-nuke/config"
 )
 
 func init() {
@@ -16,15 +17,9 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListBuckets(projectId string, credJSON []byte) {
+func ListBuckets(cfg *config.Config) {
 
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	it := client.Buckets(ctx, projectId)
+	it := cfg.StorageClient.Buckets(context.Background(), cfg.Project)
 
 	for {
 		bucket, err := it.Next()
@@ -40,14 +35,9 @@ func ListBuckets(projectId string, credJSON []byte) {
 
 }
 
-func DeleteAllBuckets(projectId string, credJSON []byte) {
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
+func DeleteAllBuckets(cfg *config.Config) {
 
-	it := client.Buckets(ctx, projectId)
+	it := cfg.StorageClient.Buckets(context.Background(), cfg.Project)
 
 	for {
 		bucket, err := it.Next()
@@ -58,39 +48,27 @@ func DeleteAllBuckets(projectId string, credJSON []byte) {
 			panic(err.Error())
 		}
 
-		deleteBucket(bucket.Name, credJSON)
+		deleteBucket(cfg, bucket.Name)
 	}
 }
 
-func deleteBucket(bucketName string, credJSON []byte) {
-
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
+func deleteBucket(cfg *config.Config, bucketName string) {
 
 	log.Debugf("Delete bucket: %s", bucketName)
-	disableBucketVersioning(bucketName, credJSON)
-	emptyBucket(bucketName, credJSON)
+	disableBucketVersioning(cfg, bucketName)
+	emptyBucket(cfg, bucketName)
 
-	err = client.Bucket(bucketName).Delete(ctx)
+	err := cfg.StorageClient.Bucket(bucketName).Delete(context.Background())
 	if err != nil {
 		panic(err.Error())
 	}
 
 }
 
-func disableBucketVersioning(bucketName string, credJSON []byte) {
-
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
+func disableBucketVersioning(cfg *config.Config, bucketName string) {
 
 	log.Debugf("Disable bucket versioning: %s", bucketName)
-	_, err = client.Bucket(bucketName).Update(ctx, storage.BucketAttrsToUpdate{
+	_, err := cfg.StorageClient.Bucket(bucketName).Update(context.Background(), storage.BucketAttrsToUpdate{
 		VersioningEnabled: false,
 	})
 	if err != nil {
@@ -99,22 +77,16 @@ func disableBucketVersioning(bucketName string, credJSON []byte) {
 
 }
 
-func emptyBucket(bucketName string, credJSON []byte) {
+func emptyBucket(cfg *config.Config, bucketName string) {
 
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	bucket := client.Bucket(bucketName)
+	bucket := cfg.StorageClient.Bucket(bucketName)
 
 	query := &storage.Query{
 		Prefix:   "",
 		Versions: true,
 	}
 
-	it := bucket.Objects(ctx, query)
+	it := bucket.Objects(context.Background(), query)
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {
@@ -126,7 +98,7 @@ func emptyBucket(bucketName string, credJSON []byte) {
 
 		object := bucket.Object(attrs.Name).Generation(attrs.Generation)
 		log.Debugf("Delete object: %s generation: %d", attrs.Name, attrs.Generation)
-		err = object.Delete(ctx)
+		err = object.Delete(context.Background())
 		if err != nil {
 			panic(err.Error())
 		}

@@ -1,12 +1,23 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/danielinclouds/gcp-nuke/config"
+	"github.com/danielinclouds/gcp-nuke/credentials"
 	"github.com/danielinclouds/gcp-nuke/gcp"
+	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/container/v1"
+	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/option"
+	"google.golang.org/api/serviceusage/v1"
 
+	asset "cloud.google.com/go/asset/apiv1"
+	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/storage"
 	"github.com/urfave/cli/v2"
 )
 
@@ -39,29 +50,89 @@ func Command() {
 		},
 		Action: func(c *cli.Context) error {
 
-			credentials, err := gcp.FindCredentials(c.String("credentials"))
+			creds, err := credentials.FindCredentials(c.String("credentials"))
 			if err != nil {
 				return err
 			}
 
-			gcp.ListPubSub(c.String("project"), credentials.JSON)
-			gcp.ListBuckets(c.String("project"), credentials.JSON)
-			gcp.ListGKEClusters(c.String("project"), credentials.JSON)
-			gcp.ListVPC(c.String("project"), credentials.JSON)
-			gcp.ListServiceAccounts(c.String("project"), credentials)
-			// gcp.ListNonDefaultServices(c.String("project"), credentials.JSON)
-			// gcp.ListAssets(c.String("project"), credentials.JSON)
+			// Bucket
+			storageClient, err := storage.NewClient(context.Background(), option.WithCredentialsJSON(creds.JSON))
+			if err != nil {
+				panic(err.Error())
+			}
 
-			if c.Bool("dry-run") == true {
+			// GKE clusters
+			containerService, err := container.NewService(context.Background(), option.WithCredentialsJSON(creds.JSON))
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Service usage
+			serviceusageService, err := serviceusage.NewService(context.Background(), option.WithCredentialsJSON(creds.JSON))
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Networks
+			computeService, err := compute.NewService(context.Background(), option.WithCredentialsJSON(creds.JSON))
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// PubSub
+			pubSubClient, err := pubsub.NewClient(context.Background(), c.String("project"), option.WithCredentialsJSON(creds.JSON))
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Service Account
+			iamService, err := iam.NewService(context.Background(), option.WithCredentialsJSON(creds.JSON))
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Assets
+			assetsClient, err := asset.NewClient(context.Background(), option.WithCredentialsJSON(creds.JSON))
+			if err != nil {
+				panic(err.Error())
+			}
+
+			// Close clients
+			defer storageClient.Close()
+			defer pubSubClient.Close()
+			defer assetsClient.Close()
+
+			// Config
+			cfg := config.Config{
+				Project:             c.String("project"),
+				Credentials:         creds,
+				StorageClient:       storageClient,
+				ContainerService:    containerService,
+				ServiceusageService: serviceusageService,
+				ComputeService:      computeService,
+				PubSubClient:        pubSubClient,
+				IamService:          iamService,
+				AssetsClient:        assetsClient,
+			}
+
+			gcp.ListPubSub(&cfg)
+			gcp.ListGKEClusters(&cfg)
+			gcp.ListBuckets(&cfg)
+			gcp.ListVPC(&cfg)
+			gcp.ListServiceAccounts(&cfg)
+			gcp.ListNonDefaultServices(&cfg)
+			// gcp.ListAssets(&cfg)
+
+			if c.Bool("dry-run") {
 				return nil
 			}
 
-			gcp.DeleteAllGKEClusters(c.String("project"), credentials.JSON)
-			gcp.DeleteAllPubSub(c.String("project"), credentials.JSON)
-			gcp.DeleteAllBuckets(c.String("project"), credentials.JSON)
-			gcp.DeleteAllVPC(c.String("project"), credentials.JSON)
-			gcp.DeleteAllServiceAccounts(c.String("project"), credentials)
-			// gcp.DisableAllNonDefaultServices(c.String("project"), credentials.JSON)
+			gcp.DeleteAllGKEClusters(&cfg)
+			gcp.DeleteAllPubSub(&cfg)
+			gcp.DeleteAllBuckets(&cfg)
+			gcp.DeleteAllVPC(&cfg)
+			// gcp.DeleteAllServiceAccounts(&cfg)
+			// gcp.DisableAllNonDefaultServices(&cfg)
 
 			return nil
 		},

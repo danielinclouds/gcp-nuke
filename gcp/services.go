@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/danielinclouds/gcp-nuke/config"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/option"
@@ -18,20 +19,14 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListNonDefaultServices(projectId string, credJSON []byte) {
-
-	ctx := context.Background()
-	serviceusageService, err := serviceusage.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
+func ListNonDefaultServices(cfg *config.Config) {
 
 	// TODO: Handle multiple pages
-	resp, err := serviceusageService.Services.
-		List(fmt.Sprintf("projects/%s", projectId)).
+	resp, err := cfg.ServiceusageService.Services.
+		List(fmt.Sprintf("projects/%s", cfg.Project)).
 		Filter("state:ENABLED").
 		PageSize(200).
-		Context(ctx).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
@@ -42,27 +37,21 @@ func ListNonDefaultServices(projectId string, credJSON []byte) {
 		enabledServices = append(enabledServices, service.Name)
 	}
 
-	enabledServices = removeDefaultServices(projectId, credJSON, enabledServices)
+	enabledServices = removeDefaultServices(cfg, enabledServices)
 	for _, service := range enabledServices {
 		log.Infof("API Service: %s", service)
 	}
 
 }
 
-func DisableAllNonDefaultServices(projectId string, credJSON []byte) {
-
-	ctx := context.Background()
-	serviceusageService, err := serviceusage.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
+func DisableAllNonDefaultServices(cfg *config.Config) {
 
 	// TODO: Handle multiple pages
-	resp, err := serviceusageService.Services.
-		List(fmt.Sprintf("projects/%s", projectId)).
+	resp, err := cfg.ServiceusageService.Services.
+		List(fmt.Sprintf("projects/%s", cfg.Project)).
 		Filter("state:ENABLED").
 		PageSize(200).
-		Context(ctx).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
@@ -73,25 +62,19 @@ func DisableAllNonDefaultServices(projectId string, credJSON []byte) {
 		enabledServices = append(enabledServices, service.Name)
 	}
 
-	enabledServices = removeDefaultServices(projectId, credJSON, enabledServices)
+	enabledServices = removeDefaultServices(cfg, enabledServices)
 	for _, service := range enabledServices {
-		disableService(service, credJSON)
+		disableService(cfg, service)
 	}
 
 }
 
-func disableService(serviceName string, credJSON []byte) {
-
-	ctx := context.Background()
-	serviceusageService, err := serviceusage.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
+func disableService(cfg *config.Config, serviceName string) {
 
 	log.Debugf("Disable service: %s", serviceName)
-	operation, err := serviceusageService.Services.
+	operation, err := cfg.ServiceusageService.Services.
 		Disable(serviceName, &serviceusage.DisableServiceRequest{DisableDependentServices: true}).
-		Context(ctx).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
@@ -105,7 +88,7 @@ func disableService(serviceName string, credJSON []byte) {
 	ticker := time.NewTicker(1 * time.Second)
 	for range ticker.C {
 
-		operation, err = serviceusageService.Operations.Get(operation.Name).Context(ctx).Do()
+		operation, err = cfg.ServiceusageService.Operations.Get(operation.Name).Context(context.Background()).Do()
 		if err != nil {
 			panic(err.Error())
 		}
@@ -118,9 +101,9 @@ func disableService(serviceName string, credJSON []byte) {
 
 }
 
-func removeDefaultServices(projectId string, credJSON []byte, enabledServices []string) []string {
+func removeDefaultServices(cfg *config.Config, enabledServices []string) []string {
 
-	projectNumber := getProjectNumber(projectId, credJSON)
+	projectNumber := getProjectNumber(cfg)
 
 	defaultServices := []string{
 		"bigquery.googleapis.com",
@@ -162,16 +145,17 @@ func removeDefaultServices(projectId string, credJSON []byte, enabledServices []
 	return nonDefaultServices
 }
 
-func getProjectNumber(projectId string, credJSON []byte) int64 {
+func getProjectNumber(cfg *config.Config) int64 {
 
-	ctx := context.Background()
-
-	cloudresourcemanagerService, err := cloudresourcemanager.NewService(ctx, option.WithCredentialsJSON(credJSON))
+	cloudresourcemanagerService, err := cloudresourcemanager.NewService(context.Background(), option.WithCredentialsJSON(cfg.Credentials.JSON))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	project, err := cloudresourcemanagerService.Projects.Get(projectId).Context(ctx).Do()
+	project, err := cloudresourcemanagerService.Projects.
+		Get(cfg.Project).
+		Context(context.Background()).
+		Do()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -179,17 +163,11 @@ func getProjectNumber(projectId string, credJSON []byte) int64 {
 	return project.ProjectNumber
 }
 
-func isServiceDisabled(projectId string, credJSON []byte, api string) bool {
+func isServiceDisabled(cfg *config.Config, api string) bool {
 
-	ctx := context.Background()
-	serviceusageService, err := serviceusage.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	service, err := serviceusageService.Services.
-		Get(fmt.Sprintf("projects/%s/services/%s", projectId, api)).
-		Context(ctx).
+	service, err := cfg.ServiceusageService.Services.
+		Get(fmt.Sprintf("projects/%s/services/%s", cfg.Project, api)).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())

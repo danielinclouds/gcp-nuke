@@ -1,4 +1,4 @@
-package gcp
+package credentials
 
 import (
 	"encoding/json"

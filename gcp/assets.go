@@ -3,25 +3,31 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"os"
 
-	asset "cloud.google.com/go/asset/apiv1"
+	"github.com/danielinclouds/gcp-nuke/config"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 	assetpb "google.golang.org/genproto/googleapis/cloud/asset/v1"
 )
 
-func ListAssets(projectId string, credJSON []byte) {
-	ctx := context.Background()
-	client, err := asset.NewClient(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
+func init() {
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
+
+func ListAssets(cfg *config.Config) {
+	if isServiceDisabled(cfg, "cloudasset.googleapis.com") {
+		log.Debug("Assets API is disabled")
+		return
 	}
 
 	req := &assetpb.SearchAllResourcesRequest{
-		Scope: fmt.Sprintf("projects/%s", projectId),
+		Scope: fmt.Sprintf("projects/%s", cfg.Project),
 	}
 
-	it := client.SearchAllResources(ctx, req)
+	it := cfg.AssetsClient.SearchAllResources(context.Background(), req)
 	fmt.Println("Remaining assets:")
 	for {
 		resp, err := it.Next()

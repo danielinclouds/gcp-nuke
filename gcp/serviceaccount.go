@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/danielinclouds/gcp-nuke/config"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/api/iam/v1"
-	"google.golang.org/api/option"
 )
 
 func init() {
@@ -16,17 +15,11 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListServiceAccounts(projectId string, credentials Credentials) {
+func ListServiceAccounts(cfg *config.Config) {
 
-	ctx := context.Background()
-	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credentials.JSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	resp, err := iamService.Projects.ServiceAccounts.
-		List(fmt.Sprintf("projects/%s", projectId)).
-		Context(ctx).
+	resp, err := cfg.IamService.Projects.ServiceAccounts.
+		List(fmt.Sprintf("projects/%s", cfg.Project)).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
@@ -34,8 +27,8 @@ func ListServiceAccounts(projectId string, credentials Credentials) {
 
 	for _, sa := range resp.Accounts {
 
-		if sa.Email == credentials.Email {
-			log.Infof("Skipping current %s service account", credentials.Email)
+		if sa.Email == cfg.Credentials.Email {
+			log.Infof("Skipping current %s service account", cfg.Credentials.Email)
 			continue
 		}
 
@@ -44,17 +37,11 @@ func ListServiceAccounts(projectId string, credentials Credentials) {
 
 }
 
-func DeleteAllServiceAccounts(projectId string, credentials Credentials) {
+func DeleteAllServiceAccounts(cfg *config.Config) {
 
-	ctx := context.Background()
-	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credentials.JSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	resp, err := iamService.Projects.ServiceAccounts.
-		List(fmt.Sprintf("projects/%s", projectId)).
-		Context(ctx).
+	resp, err := cfg.IamService.Projects.ServiceAccounts.
+		List(fmt.Sprintf("projects/%s", cfg.Project)).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
@@ -62,27 +49,21 @@ func DeleteAllServiceAccounts(projectId string, credentials Credentials) {
 
 	for _, sa := range resp.Accounts {
 
-		if sa.Email == credentials.Email {
-			log.Debugf("Skipping current %s service account", credentials.Email)
+		if sa.Email == cfg.Credentials.Email {
+			log.Debugf("Skipping current %s service account", cfg.Credentials.Email)
 			continue
 		}
 
 		log.Debugf("Delete service account: %s", sa.Name)
-		deleteServiceAccount(sa.Name, credentials)
+		deleteServiceAccount(cfg, sa.Name)
 
 	}
 
 }
 
-func deleteServiceAccount(name string, credentials Credentials) {
+func deleteServiceAccount(cfg *config.Config, name string) {
 
-	ctx := context.Background()
-	iamService, err := iam.NewService(ctx, option.WithCredentialsJSON(credentials.JSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	_, err = iamService.Projects.ServiceAccounts.Delete(name).Context(ctx).Do()
+	_, err := cfg.IamService.Projects.ServiceAccounts.Delete(name).Context(context.Background()).Do()
 	if err != nil {
 		panic(err.Error())
 	}

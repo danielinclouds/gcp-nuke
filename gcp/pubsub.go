@@ -4,11 +4,9 @@ import (
 	"context"
 	"os"
 
-	"cloud.google.com/go/pubsub"
-
+	"github.com/danielinclouds/gcp-nuke/config"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
 )
 
 func init() {
@@ -17,21 +15,13 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListPubSub(projectId string, credJSON []byte) {
-	if isServiceDisabled(projectId, credJSON, "pubsub.googleapis.com") {
+func ListPubSub(cfg *config.Config) {
+	if isServiceDisabled(cfg, "pubsub.googleapis.com") {
 		log.Debug("PubSub API is disabled")
 		return
 	}
 
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectId, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer client.Close()
-
-	subscriptionIterator := client.Subscriptions(ctx)
+	subscriptionIterator := cfg.PubSubClient.Subscriptions(context.Background())
 
 	for {
 		subscription, err := subscriptionIterator.Next()
@@ -46,7 +36,7 @@ func ListPubSub(projectId string, credJSON []byte) {
 
 	}
 
-	topicIterator := client.Topics(ctx)
+	topicIterator := cfg.PubSubClient.Topics(context.Background())
 
 	for {
 		topic, err := topicIterator.Next()
@@ -61,21 +51,13 @@ func ListPubSub(projectId string, credJSON []byte) {
 	}
 }
 
-func DeleteAllPubSub(projectId string, credJSON []byte) {
-	if isServiceDisabled(projectId, credJSON, "pubsub.googleapis.com") {
+func DeleteAllPubSub(cfg *config.Config) {
+	if isServiceDisabled(cfg, "pubsub.googleapis.com") {
 		log.Debug("PubSub API is disabled")
 		return
 	}
 
-	ctx := context.Background()
-	client, err := pubsub.NewClient(ctx, projectId, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer client.Close()
-
-	subscriptionIterator := client.Subscriptions(ctx)
+	subscriptionIterator := cfg.PubSubClient.Subscriptions(context.Background())
 
 	for {
 		subscription, err := subscriptionIterator.Next()
@@ -87,14 +69,14 @@ func DeleteAllPubSub(projectId string, credJSON []byte) {
 		}
 
 		log.Debugf("Deleting subscription: %s", subscription.ID())
-		err = subscription.Delete(ctx)
+		err = subscription.Delete(context.Background())
 		if err != nil {
 			panic(err.Error())
 		}
 
 	}
 
-	topicIterator := client.Topics(ctx)
+	topicIterator := cfg.PubSubClient.Topics(context.Background())
 
 	for {
 		topic, err := topicIterator.Next()
@@ -106,7 +88,7 @@ func DeleteAllPubSub(projectId string, credJSON []byte) {
 		}
 
 		log.Debugf("Deleting topic: %s", topic.ID())
-		err = topic.Delete(ctx)
+		err = topic.Delete(context.Background())
 		if err != nil {
 			panic(err.Error())
 		}

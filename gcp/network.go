@@ -4,11 +4,10 @@ import (
 	"context"
 	"os"
 
+	"github.com/danielinclouds/gcp-nuke/config"
 	"github.com/danielinclouds/gcp-nuke/helpers"
 
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/option"
 )
 
 func init() {
@@ -17,15 +16,9 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func ListVPC(projectId string, credJSON []byte) {
+func ListVPC(cfg *config.Config) {
 
-	ctx := context.Background()
-	computeService, err := compute.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	networkListCall := computeService.Networks.List(projectId)
+	networkListCall := cfg.ComputeService.Networks.List(cfg.Project)
 	networkList, err := networkListCall.Do()
 	if err != nil {
 		panic(err.Error())
@@ -37,15 +30,9 @@ func ListVPC(projectId string, credJSON []byte) {
 
 }
 
-func DeleteAllVPC(projectId string, credJSON []byte) {
+func DeleteAllVPC(cfg *config.Config) {
 
-	ctx := context.Background()
-	computeService, err := compute.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	networks, err := computeService.Networks.List(projectId).Context(ctx).Do()
+	networks, err := cfg.ComputeService.Networks.List(cfg.Project).Context(context.Background()).Do()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -61,26 +48,23 @@ func DeleteAllVPC(projectId string, credJSON []byte) {
 
 		log.Debugf("Deleting network: %s", n.Name)
 
-		deleteAllSubnetworks(credJSON, n.Subnetworks)
-		deleteVPC(projectId, credJSON, n.Name)
+		deleteAllSubnetworks(cfg, n.Subnetworks)
+		deleteVPC(cfg, n.Name)
 	}
 }
 
-func deleteVPC(projectId string, credJSON []byte, network string) {
+func deleteVPC(cfg *config.Config, network string) {
 
-	ctx := context.Background()
-	computeService, err := compute.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	networkDeleteCall := computeService.Networks.Delete(projectId, "daniel")
+	networkDeleteCall := cfg.ComputeService.Networks.Delete(cfg.Project, "daniel")
 	operation, err := networkDeleteCall.Do()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	gresp, err := computeService.GlobalOperations.Wait(projectId, operation.Name).Context(ctx).Do()
+	gresp, err := cfg.ComputeService.GlobalOperations.
+		Wait(cfg.Project, operation.Name).
+		Context(context.Background()).
+		Do()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -94,7 +78,7 @@ func deleteVPC(projectId string, credJSON []byte, network string) {
 
 }
 
-func deleteAllSubnetworks(credJSON []byte, subnetworks []string) {
+func deleteAllSubnetworks(cfg *config.Config, subnetworks []string) {
 
 	for _, subnetwork := range subnetworks {
 		sub, err := helpers.ParseSubnetworkSelfLink(subnetwork)
@@ -103,30 +87,24 @@ func deleteAllSubnetworks(credJSON []byte, subnetworks []string) {
 		}
 
 		log.Debugf("Deleting subnetwork: %s", sub.Name)
-		deleteSubnetwork(credJSON, sub)
+		deleteSubnetwork(cfg, sub)
 	}
 
 }
 
-func deleteSubnetwork(credJSON []byte, subnetwork helpers.SubnetworkSelfLink) {
+func deleteSubnetwork(cfg *config.Config, subnetwork helpers.SubnetworkSelfLink) {
 
-	ctx := context.Background()
-	computeService, err := compute.NewService(ctx, option.WithCredentialsJSON(credJSON))
-	if err != nil {
-		panic(err.Error())
-	}
-
-	operation, err := computeService.Subnetworks.
+	operation, err := cfg.ComputeService.Subnetworks.
 		Delete(subnetwork.Project, subnetwork.Region, subnetwork.Name).
-		Context(ctx).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	resp, err := computeService.RegionOperations.
+	resp, err := cfg.ComputeService.RegionOperations.
 		Wait(subnetwork.Project, subnetwork.Region, operation.Name).
-		Context(ctx).
+		Context(context.Background()).
 		Do()
 	if err != nil {
 		panic(err.Error())
